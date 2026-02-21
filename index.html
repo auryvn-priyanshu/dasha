@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Divya-Data | AI Vimshottari Dasha Calculator</title>
+    <!-- Chart.js for visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --blush: #FCE7F3;
+            --lilac: #EDE9FE;
+            --sky: #E0F2FE;
+            --cream: #FFFCF9;
+            --text-main: #4B5563;
+            --accent-grad: linear-gradient(135deg, #C4B5FD 0%, #BAE6FD 100%);
+            --glass: rgba(255, 255, 255, 0.6);
+            --shadow: 0 10px 30px rgba(139, 92, 246, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--cream);
+            background-image: 
+                radial-gradient(at 0% 0%, var(--blush) 0, transparent 50%),
+                radial-gradient(at 100% 100%, var(--sky) 0, transparent 50%),
+                radial-gradient(at 50% 50%, var(--lilac) 0, transparent 70%);
+            min-height: 100vh;
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Floating Glow Background Elements */
+        .glow {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: var(--lilac);
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.5;
+            animation: float 15s infinite alternate ease-in-out;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(100px, 50px); }
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .logo {
+            font-weight: 800;
+            letter-spacing: 2px;
+            font-size: 1.5rem;
+            color: #8B5CF6;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 300;
+            color: #1F2937;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Card Style */
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 600px) {
+            .input-group { grid-template-columns: 1fr; }
+            .card { padding: 1.5rem; }
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(209, 213, 219, 0.5);
+            background: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #C4B5FD;
+            box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.2);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 14px;
+            background: var(--accent-grad);
+            color: #4B5563;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(196, 181, 253, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(196, 181, 253, 0.6);
+        }
+
+        /* Results Display */
+        #results-container {
+            display: none;
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .current-dasha-badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            background: white;
+            border-radius: 30px;
+            font-weight: 700;
+            color: #8B5CF6;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .interpretation {
+            font-style: italic;
+            color: #374151;
+            font-size: 1.1rem;
+            margin: 1.5rem 0;
+            padding-left: 1rem;
+            border-left: 4px solid #FBCFE8;
+        }
+
+        /* Horizontal Timeline */
+        .timeline-wrapper {
+            overflow-x: auto;
+            padding: 2rem 0;
+            margin-top: 2rem;
+            scrollbar-width: thin;
+            scrollbar-color: var(--lilac) transparent;
+        }
+
+        .timeline {
+            display: flex;
+            min-width: 1000px;
+            position: relative;
+            padding-bottom: 2rem;
+        }
+
+        .dasha-block {
+            flex-shrink: 0;
+            padding: 1rem;
+            border-top: 4px solid #DDD;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dasha-block:hover {
+            background: rgba(255,255,255,0.4);
+            border-radius: 0 0 12px 12px;
+        }
+
+        .dasha-block.active {
+            border-top-color: #8B5CF6;
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .dasha-name {
+            font-weight: 800;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .dasha-dates {
+            font-size: 0.75rem;
+            color: #6B7280;
+        }
+
+        .age-marker {
+            position: absolute;
+            top: -30px;
+            left: 0;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #9CA3AF;
+        }
+
+        /* Antardasha List */
+        .antardasha-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .antardasha-item {
+            background: white;
+            padding: 0.8rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            border: 1px solid #F3F4F6;
+        }
+
+        .antardasha-item.current {
+            border: 2px solid #C4B5FD;
+            background: #F5F3FF;
+        }
+
+        /* Loading */
+        #loader {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .cosmic-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--blush);
+            border-top: 3px solid #8B5CF6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.8rem;
+            color: #9CA3AF;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="glow" style="top: 10%; left: 10%;"></div>
+    <div class="glow" style="bottom: 10%; right: 10%; background: var(--sky);"></div>
+
+    <header>
+        <span class="logo">DIVYA-DATA</span>
+        <h1>Cosmic Timelines</h1>
+        <p>AI-Powered Vimshottari Dasha Analysis</p>
+    </header>
+
+    <div class="container">
+        <!-- Input Section -->
+        <div class="card">
+            <div class="input-group">
+                <div>
+                    <label>Birth Date</label>
+                    <input type="date" id="dob" required>
+                </div>
+                <div>
+                    <label>Birth Time</label>
+                    <input type="time" id="tob" required>
+                </div>
+            </div>
+            <div>
+                <label>Birth Place (City)</label>
+                <input type="text" id="pob" placeholder="e.g. Mumbai, India" required>
+            </div>
+            <button class="btn-primary" onclick="calculateDasha()" style="margin-top: 1.5rem;">Unfold My Destiny</button>
+        </div>
+
+        <div id="loader">
+            <div class="cosmic-spinner"></div>
+            <p>Syncing with celestial alignments...</p>
+        </div>
+
+        <!-- Result Section -->
+        <div id="results-container">
+            <div class="card">
+                <div class="current-dasha-badge" id="current-badge">Loading...</div>
+                <h2 id="main-summary">Calculating your current phase...</h2>
+                <div class="interpretation" id="phase-interpretation">
+                    Detailed insights about your current life cycle will appear here.
+                </div>
+                
+                <div style="margin-top: 2rem;">
+                    <label>Timeline Progress (Life Cycle)</label>
+                    <canvas id="dashaChart" height="100"></canvas>
+                </div>
+            </div>
+
+            <h3 style="margin-left: 1rem; margin-bottom: 0.5rem; font-weight: 300;">Major Life Eras (Mahadasha)</h3>
+            <div class="timeline-wrapper card" style="padding: 3rem 1.5rem 1.5rem 1.5rem;">
+                <div class="timeline" id="mahadasha-timeline">
+                    <!-- Dynamic Blocks -->
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 id="antardasha-title">Sub-periods in current era</h3>
+                <div class="antardasha-grid" id="antardasha-list">
+                    <!-- Dynamic Items -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2024 Divya-Data Astrology Systems. <br>
+        Aesthetic insights for the modern seeker.
+    </footer>
+
+    <script>
+        // --- DATA & CONFIG ---
+        const DASHA_ORDER = ["Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury"];
+        const DASHA_YEARS = [7, 20, 6, 10, 7, 18, 16, 19, 17];
+        
+        const INTERPRETATIONS = {
+            "Ketu": "A time for spiritual seeking, letting go of the past, and internal reflection. You may feel detached but gain deep wisdom.",
+            "Venus": "The era of love, luxury, art, and relationships. Focus turns to comfort, romance, and aesthetic pleasure.",
+            "Sun": "A period of authority, clarity, and self-realization. Power dynamics and career advancement often take center stage.",
+            "Moon": "Emotional growth, motherhood, home, and intuition. Your sensitivity is heightened; focus on mental peace.",
+            "Mars": "Action-oriented phase. High energy, potential for conflict, but great for starting new ventures and physical feats.",
+            "Rahu": "Ambition, desire, and worldly expansion. Sudden shifts and technological or unconventional paths might open up.",
+            "Jupiter": "Wisdom, wealth, and expansion. A 'golden period' for learning, teaching, and overall prosperity.",
+            "Saturn": "Discipline, hard work, and delays. Life asks you to be patient and build solid foundations through perseverance.",
+            "Mercury": "Communication, intellect, and commerce. Great for writing, studying, networking, and business activities."
+        };
+
+        let chartInstance = null;
+
+        // --- CALCULATION LOGIC ---
+        
+        /**
+         * Simplified Moon Longitude Calculation (Approximation)
+         * Actual Vedic Astrology requires Ephemeris. This model provides a mock 
+         * algorithmic approximation based on the date to demonstrate the UI/Logic flow.
+         */
+        function getMoonLongitude(birthDate) {
+            const epoch = new Date("2000-01-01T00:00:00Z").getTime();
+            const birth = birthDate.getTime();
+            const diffDays = (birth - epoch) / (1000 * 60 * 60 * 24);
+            
+            // Moon mean motion: ~13.176 degrees/day
+            const meanLong = (125.08 + (13.17639 * diffDays)) % 360;
+            return meanLong < 0 ? meanLong + 360 : meanLong;
+        }
+
+        function calculateDasha() {
+            const dob = document.getElementById('dob').value;
+            const tob = document.getElementById('tob').value;
+            
+            if(!dob || !tob) {
+                alert("Please select your birth details first.");
+                return;
+            }
+
+            // Show Loader
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('results-container').style.display = 'none';
+
+            setTimeout(() => {
+                const birthDate = new Date(`${dob}T${tob}`);
+                const moonLong = getMoonLongitude(birthDate);
+                
+                // Nakshatra = 13° 20' = 13.333 degrees
+                const nakshatraSize = 13.333333;
+                const nakIndex = Math.floor(moonLong / nakshatraSize);
+                const dashaStartPlanetIdx = nakIndex % 9;
+                
+                // Calculate balance of first dasha
+                const longInNak = moonLong % nakshatraSize;
+                const remainingInNak = nakshatraSize - longInNak;
+                const percentageRemaining = remainingInNak / nakshatraSize;
+                
+                processDashaTimeline(birthDate, dashaStartPlanetIdx, percentageRemaining);
+                
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('results-container').style.display = 'block';
+            }, 1500);
+        }
+
+        function processDashaTimeline(birthDate, startIdx, balancePercent) {
+            let timeline = [];
+            let currentDate = new Date(birthDate);
+            let now = new Date();
+            let currentMahadasha = null;
+            
+            // Build 120 year cycle
+            let idx = startIdx;
+            let totalCycles = 0;
+
+            // First Dasha is partial
+            const firstDashaYears = DASHA_YEARS[idx] * balancePercent;
+            const firstEndDate = addYears(currentDate, firstDashaYears);
+            
+            timeline.push({
+                planet: DASHA_ORDER[idx],
+                start: new Date(currentDate),
+                end: new Date(firstEndDate),
+                duration: firstDashaYears
+            });
+            
+            currentDate = new Date(firstEndDate);
+            idx = (idx + 1) % 9;
+
+            // Fill the rest up to 120 years
+            while (timeline.length < 9) {
+                let duration = DASHA_YEARS[idx];
+                let endDate = addYears(currentDate, duration);
+                
+                timeline.push({
+                    planet: DASHA_ORDER[idx],
+                    start: new Date(currentDate),
+                    end: new Date(endDate),
+                    duration: duration
+                });
+                
+                currentDate = new Date(endDate);
+                idx = (idx + 1) % 9;
+            }
+
+            renderTimeline(timeline, now, birthDate);
+        }
+
+        function addYears(date, years) {
+            const result = new Date(date);
+            const fractionalYears = years % 1;
+            const wholeYears = Math.floor(years);
+            result.setFullYear(result.getFullYear() + wholeYears);
+            if(fractionalYears > 0) {
+                result.setMonth(result.getMonth() + Math.floor(fractionalYears * 12));
+            }
+            return result;
+        }
+
+        function renderTimeline(timeline, now, birthDate) {
+            const container = document.getElementById('mahadasha-timeline');
+            container.innerHTML = '';
+            
+            let activeDasha = null;
+
+            timeline.forEach((d, i) => {
+                const isActive = now >= d.start && now <= d.end;
+                if(isActive) activeDasha = d;
+
+                const block = document.createElement('div');
+                block.className = `dasha-block ${isActive ? 'active' : ''}`;
+                const width = (d.duration / 120) * 1000;
+                block.style.width = width + 'px';
+
+                const ageAtStart = Math.floor((d.start - birthDate) / (1000 * 60 * 60 * 24 * 365.25));
+
+                block.innerHTML = `
+                    <div class="age-marker">Age ${ageAtStart < 0 ? 0 : ageAtStart}</div>
+                    <div class="dasha-name">${d.planet}</div>
+                    <div class="dasha-dates">${d.start.getFullYear()} - ${d.end.getFullYear()}</div>
+                `;
+                
+                block.onclick = () => showAntardasha(d, now);
+                container.appendChild(block);
+            });
+
+            if(activeDasha) {
+                updateCurrentUI(activeDasha, now);
+                showAntardasha(activeDasha, now);
+                renderChart(timeline, now);
+            }
+        }
+
+        function updateCurrentUI(dasha, now) {
+            document.getElementById('current-badge').innerText = `Current: ${dasha.planet} Mahadasha`;
+            document.getElementById('main-summary').innerText = `You are in your ${dasha.planet} Era`;
+            document.getElementById('phase-interpretation').innerText = INTERPRETATIONS[dasha.planet] || "";
+        }
+
+        function showAntardasha(mahadasha, now) {
+            const list = document.getElementById('antardasha-list');
+            const title = document.getElementById('antardasha-title');
+            list.innerHTML = '';
+            title.innerText = `Sub-periods (Antardasha) in ${mahadasha.planet}`;
+
+            // Calculation: Antardasha duration = (M years * A years) / 120
+            const mYears = DASHA_YEARS[DASHA_ORDER.indexOf(mahadasha.planet)];
+            let startOfSub = new Date(mahadasha.start);
+
+            // Antardasha sequence starts with the Mahadasha lord
+            let startSubIdx = DASHA_ORDER.indexOf(mahadasha.planet);
+
+            for(let i=0; i<9; i++) {
+                let subPlanet = DASHA_ORDER[(startSubIdx + i) % 9];
+                let subYears = DASHA_YEARS[DASHA_ORDER.indexOf(subPlanet)];
+                let durationInMonths = (mYears * subYears) * 0.1; // (M*A)/120 * 12 months = (M*A)/10
+                
+                let endOfSub = new Date(startOfSub);
+                endOfSub.setMonth(endOfSub.getMonth() + (durationInMonths));
+
+                const isActive = now >= startOfSub && now <= endOfSub;
+                
+                const item = document.createElement('div');
+                item.className = `antardasha-item ${isActive ? 'current' : ''}`;
+                item.innerHTML = `
+                    <strong>${subPlanet}</strong><br>
+                    <span style="opacity: 0.7">${startOfSub.toLocaleDateString('en-US', {month: 'short', year:'2-digit'})} - ${endOfSub.toLocaleDateString('en-US', {month: 'short', year:'2-digit'})}</span>
+                    ${isActive ? '<br><span style="color:#8B5CF6; font-size: 0.6rem; font-weight:bold;">CURRENT PHASE</span>' : ''}
+                `;
+                list.appendChild(item);
+
+                startOfSub = new Date(endOfSub);
+            }
+        }
+
+        function renderChart(timeline, now) {
+            const ctx = document.getElementById('dashaChart').getContext('2d');
+            
+            if(chartInstance) chartInstance.destroy();
+
+            const labels = timeline.map(d => d.planet);
+            const data = timeline.map(d => d.duration);
+            const backgroundColors = timeline.map(d => (now >= d.start && now <= d.end) ? '#C4B5FD' : '#F3F4F6');
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Years',
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderRadius: 8,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Initialize with helpful defaults
+        window.onload = () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dob').value = "1995-06-15";
+            document.getElementById('tob').value = "14:30";
+            document.getElementById('pob').value = "New York, USA";
+        };
+    </script>
+</body>
+</html>
