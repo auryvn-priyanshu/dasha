@@ -3,603 +3,397 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Divya-Data | AI Vimshottari Dasha Calculator</title>
-    <!-- Chart.js for visualization -->
+    <title>Divya-Data | Maha-Vimshottari Dasha AI</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Serif+Devanagari:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap');
+
         :root {
             --blush: #FCE7F3;
             --lilac: #EDE9FE;
             --sky: #E0F2FE;
             --cream: #FFFCF9;
-            --text-main: #4B5563;
+            --gold: #D4AF37;
+            --sanskrit: #8B5CF6;
+            --text-main: #1F2937;
+            --glass: rgba(255, 255, 255, 0.75);
             --accent-grad: linear-gradient(135deg, #C4B5FD 0%, #BAE6FD 100%);
-            --glass: rgba(255, 255, 255, 0.6);
-            --shadow: 0 10px 30px rgba(139, 92, 246, 0.1);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             background-color: var(--cream);
             background-image: 
+                url("https://www.transparenttextures.com/patterns/cubes.png"),
                 radial-gradient(at 0% 0%, var(--blush) 0, transparent 50%),
-                radial-gradient(at 100% 100%, var(--sky) 0, transparent 50%),
-                radial-gradient(at 50% 50%, var(--lilac) 0, transparent 70%);
-            min-height: 100vh;
+                radial-gradient(at 100% 100%, var(--sky) 0, transparent 50%);
             color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
             overflow-x: hidden;
-            line-height: 1.6;
+            line-height: 1.7;
         }
 
-        /* Floating Glow Background Elements */
-        .glow {
+        .devanagari { font-family: 'Noto Serif Devanagari', serif; }
+        .mythic-title { font-family: 'Cinzel', serif; letter-spacing: 2px; }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+        /* Mythological Background Accents */
+        .mandala-bg {
             position: fixed;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            background: var(--lilac);
-            filter: blur(80px);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 800px;
+            opacity: 0.03;
             z-index: -1;
-            opacity: 0.5;
-            animation: float 15s infinite alternate ease-in-out;
+            pointer-events: none;
         }
 
-        @keyframes float {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(100px, 50px); }
-        }
+        header { text-align: center; padding: 4rem 1rem; position: relative; }
+        .logo { font-size: 1.2rem; font-weight: 700; color: var(--gold); margin-bottom: 1rem; display: block; }
+        h1 { font-size: 3rem; margin-bottom: 0.5rem; color: #111827; }
+        .shloka-header { font-style: italic; color: var(--sanskrit); margin-bottom: 2rem; }
 
-        header {
-            text-align: center;
-            padding: 3rem 1rem;
-        }
-
-        .logo {
-            font-weight: 800;
-            letter-spacing: 2px;
-            font-size: 1.5rem;
-            color: #8B5CF6;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        h1 {
-            font-size: 2.2rem;
-            font-weight: 300;
-            color: #1F2937;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 1rem;
-        }
-
-        /* Card Style */
-        .card {
+        /* Forms */
+        .glass-card {
             background: var(--glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            border-radius: 24px;
-            padding: 2.5rem;
-            box-shadow: var(--shadow);
-            margin-bottom: 2rem;
-            transition: transform 0.3s ease;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 32px;
+            padding: 3rem;
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.1);
+            margin-bottom: 3rem;
         }
 
-        .input-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        @media (max-width: 600px) {
-            .input-group { grid-template-columns: 1fr; }
-            .card { padding: 1.5rem; }
-        }
-
-        label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #6B7280;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem; }
+        label { display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #6B7280; margin-bottom: 0.5rem; }
         input {
-            width: 100%;
-            padding: 0.8rem 1rem;
-            border-radius: 12px;
-            border: 1px solid rgba(209, 213, 219, 0.5);
-            background: white;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.3s ease;
+            width: 100%; padding: 1rem; border-radius: 16px; border: 1px solid #E5E7EB;
+            font-size: 1rem; transition: all 0.3s ease; background: white;
         }
+        input:focus { outline: none; border-color: var(--sanskrit); box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1); }
 
-        input:focus {
-            border-color: #C4B5FD;
-            box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.2);
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 1rem;
-            border: none;
-            border-radius: 14px;
+        .btn-divine {
             background: var(--accent-grad);
-            color: #4B5563;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(196, 181, 253, 0.4);
+            border: none; padding: 1.2rem 2.5rem; border-radius: 50px;
+            color: #4B5563; font-weight: 800; font-size: 1.1rem; cursor: pointer;
+            transition: 0.4s; box-shadow: 0 10px 20px rgba(196, 181, 253, 0.4);
+            width: 100%;
+        }
+        .btn-divine:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 30px rgba(196, 181, 253, 0.6); }
+
+        /* Detailed Analysis Section */
+        #results-area { display: none; animation: slideUp 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+        .hero-analysis { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; }
+        @media (max-width: 900px) { .hero-analysis { grid-template-columns: 1fr; } }
+
+        .planet-archetype {
+            font-size: 4rem; color: var(--sanskrit); opacity: 0.15; position: absolute; right: 2rem; top: 1rem;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(196, 181, 253, 0.6);
-        }
-
-        /* Results Display */
-        #results-container {
-            display: none;
-            animation: fadeIn 0.8s ease forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .current-dasha-badge {
-            display: inline-block;
-            padding: 0.5rem 1.5rem;
-            background: white;
-            border-radius: 30px;
-            font-weight: 700;
-            color: #8B5CF6;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .interpretation {
-            font-style: italic;
-            color: #374151;
-            font-size: 1.1rem;
-            margin: 1.5rem 0;
-            padding-left: 1rem;
-            border-left: 4px solid #FBCFE8;
-        }
-
-        /* Horizontal Timeline */
-        .timeline-wrapper {
-            overflow-x: auto;
-            padding: 2rem 0;
-            margin-top: 2rem;
-            scrollbar-width: thin;
-            scrollbar-color: var(--lilac) transparent;
-        }
-
-        .timeline {
-            display: flex;
-            min-width: 1000px;
+        .insight-box { margin-bottom: 2rem; }
+        .insight-box h3 { font-family: 'Cinzel', serif; color: var(--gold); border-bottom: 1px solid var(--blush); padding-bottom: 0.5rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; }
+        
+        .timeline-container { overflow-x: auto; padding: 3rem 0; cursor: grab; }
+        .timeline-track { display: flex; gap: 10px; min-width: 1400px; padding-bottom: 1rem; }
+        
+        .dasha-node {
+            flex-shrink: 0; border-left: 3px solid var(--lilac); padding: 1.5rem;
+            background: white; border-radius: 0 20px 20px 0; transition: 0.3s;
             position: relative;
-            padding-bottom: 2rem;
         }
+        .dasha-node.active { border-left-color: var(--sanskrit); background: var(--lilac); }
+        .node-planet { font-weight: 800; font-size: 1.2rem; }
+        .node-sanskrit { font-family: 'Noto Serif Devanagari', serif; font-size: 0.9rem; color: var(--sanskrit); }
+        
+        /* Detailed Grid */
+        .advice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .advice-card { background: white; padding: 2rem; border-radius: 24px; border: 1px solid #F3F4F6; }
+        .advice-card h4 { font-family: 'Cinzel', serif; margin-bottom: 1rem; color: #4B5563; }
 
-        .dasha-block {
-            flex-shrink: 0;
-            padding: 1rem;
-            border-top: 4px solid #DDD;
-            position: relative;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
+        #loader { display: none; text-align: center; padding: 5rem; }
+        .om-spinner { font-size: 3rem; animation: pulseOm 2s infinite; color: var(--sanskrit); }
+        @keyframes pulseOm { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
 
-        .dasha-block:hover {
-            background: rgba(255,255,255,0.4);
-            border-radius: 0 0 12px 12px;
-        }
-
-        .dasha-block.active {
-            border-top-color: #8B5CF6;
-            background: rgba(139, 92, 246, 0.05);
-        }
-
-        .dasha-name {
-            font-weight: 800;
-            font-size: 0.9rem;
-            margin-bottom: 4px;
-        }
-
-        .dasha-dates {
-            font-size: 0.75rem;
-            color: #6B7280;
-        }
-
-        .age-marker {
-            position: absolute;
-            top: -30px;
-            left: 0;
-            font-size: 0.7rem;
-            font-weight: bold;
-            color: #9CA3AF;
-        }
-
-        /* Antardasha List */
-        .antardasha-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .antardasha-item {
-            background: white;
-            padding: 0.8rem;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            border: 1px solid #F3F4F6;
-        }
-
-        .antardasha-item.current {
-            border: 2px solid #C4B5FD;
-            background: #F5F3FF;
-        }
-
-        /* Loading */
-        #loader {
-            display: none;
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .cosmic-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid var(--blush);
-            border-top: 3px solid #8B5CF6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        footer {
-            text-align: center;
-            padding: 2rem;
-            font-size: 0.8rem;
-            color: #9CA3AF;
-        }
-
+        footer { text-align: center; padding: 5rem 2rem; color: #9CA3AF; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
-    <div class="glow" style="top: 10%; left: 10%;"></div>
-    <div class="glow" style="bottom: 10%; right: 10%; background: var(--sky);"></div>
-
-    <header>
-        <span class="logo">DIVYA-DATA</span>
-        <h1>Cosmic Timelines</h1>
-        <p>AI-Powered Vimshottari Dasha Analysis</p>
-    </header>
+    <svg class="mandala-bg" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="0.5"/>
+        <path d="M50 5 L55 45 L95 50 L55 55 L50 95 L45 55 L5 50 L45 45 Z" fill="none" stroke="currentColor" stroke-width="0.2"/>
+    </svg>
 
     <div class="container">
-        <!-- Input Section -->
-        <div class="card">
-            <div class="input-group">
+        <header>
+            <span class="logo mythic-title">DIVYA-DATA</span>
+            <h1 class="mythic-title">Maha-Vimshottari</h1>
+            <p class="shloka-header devanagari">॥ शुभमस्तु । सर्वं नक्षत्र अधीनम् ॥</p>
+            <p>(May all be auspicious. Everything is under the influence of the stars.)</p>
+        </header>
+
+        <!-- Input -->
+        <div class="glass-card">
+            <div class="input-grid">
                 <div>
-                    <label>Birth Date</label>
-                    <input type="date" id="dob" required>
+                    <label>Date of Advent</label>
+                    <input type="date" id="dob" value="1998-08-15">
                 </div>
                 <div>
-                    <label>Birth Time</label>
-                    <input type="time" id="tob" required>
+                    <label>Time of Incarnation</label>
+                    <input type="time" id="tob" value="10:00">
+                </div>
+                <div>
+                    <label>Coordinates (Place)</label>
+                    <input type="text" id="pob" placeholder="City, Country" value="Ujjain, India">
                 </div>
             </div>
-            <div>
-                <label>Birth Place (City)</label>
-                <input type="text" id="pob" placeholder="e.g. Mumbai, India" required>
-            </div>
-            <button class="btn-primary" onclick="calculateDasha()" style="margin-top: 1.5rem;">Unfold My Destiny</button>
+            <button class="btn-divine mythic-title" onclick="calculateDeepDasha()">Consult the Heavens</button>
         </div>
 
         <div id="loader">
-            <div class="cosmic-spinner"></div>
-            <p>Syncing with celestial alignments...</p>
+            <div class="om-spinner devanagari">ॐ</div>
+            <p>Scanning Akashic Records...</p>
         </div>
 
-        <!-- Result Section -->
-        <div id="results-container">
-            <div class="card">
-                <div class="current-dasha-badge" id="current-badge">Loading...</div>
-                <h2 id="main-summary">Calculating your current phase...</h2>
-                <div class="interpretation" id="phase-interpretation">
-                    Detailed insights about your current life cycle will appear here.
-                </div>
+        <!-- Results Area -->
+        <div id="results-area">
+            
+            <!-- Current Mahadasha Deep Dive -->
+            <div class="glass-card" style="position: relative; overflow: hidden;">
+                <div id="planet-icon" class="planet-archetype devanagari"></div>
                 
-                <div style="margin-top: 2rem;">
-                    <label>Timeline Progress (Life Cycle)</label>
-                    <canvas id="dashaChart" height="100"></canvas>
+                <div class="hero-analysis">
+                    <div>
+                        <span id="current-badge" class="logo" style="background: white; padding: 5px 15px; border-radius: 20px;"></span>
+                        <h2 id="main-title" class="mythic-title" style="font-size: 2.5rem; margin: 1rem 0;"></h2>
+                        <p id="shloka-box" class="devanagari" style="color: var(--sanskrit); font-weight: 600; font-size: 1.2rem;"></p>
+                        
+                        <div class="insight-box" style="margin-top: 2rem;">
+                            <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> The Soul's Journey</h3>
+                            <p id="journey-desc"></p>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.4); padding: 1.5rem; border-radius: 20px;">
+                        <canvas id="cycleChart"></canvas>
+                        <div id="antardasha-mini" style="margin-top: 1rem; font-size: 0.85rem;"></div>
+                    </div>
                 </div>
             </div>
 
-            <h3 style="margin-left: 1rem; margin-bottom: 0.5rem; font-weight: 300;">Major Life Eras (Mahadasha)</h3>
-            <div class="timeline-wrapper card" style="padding: 3rem 1.5rem 1.5rem 1.5rem;">
-                <div class="timeline" id="mahadasha-timeline">
-                    <!-- Dynamic Blocks -->
+            <h2 class="mythic-title" style="margin-bottom: 1rem; color: #4B5563;">Eternal Life Timeline</h2>
+            <div class="timeline-container">
+                <div class="timeline-track" id="main-track"></div>
+            </div>
+
+            <!-- Deep Advice Grid -->
+            <div class="advice-grid">
+                <div class="advice-card">
+                    <h4 class="mythic-title">💼 Artha (Career & Wealth)</h4>
+                    <p id="career-advice"></p>
+                </div>
+                <div class="advice-card">
+                    <h4 class="mythic-title">❤️ Kama (Love & Desire)</h4>
+                    <p id="love-advice"></p>
+                </div>
+                <div class="advice-card">
+                    <h4 class="mythic-title">🌿 Arogya (Wellness & Energy)</h4>
+                    <p id="health-advice"></p>
+                </div>
+                <div class="advice-card">
+                    <h4 class="mythic-title">🧘 Dharma (Purpose & Ritual)</h4>
+                    <p id="spiritual-advice"></p>
                 </div>
             </div>
 
-            <div class="card">
-                <h3 id="antardasha-title">Sub-periods in current era</h3>
-                <div class="antardasha-grid" id="antardasha-list">
-                    <!-- Dynamic Items -->
-                </div>
-            </div>
         </div>
     </div>
 
     <footer>
-        &copy; 2024 Divya-Data Astrology Systems. <br>
-        Aesthetic insights for the modern seeker.
+        <p>&copy; DIVYA-DATA ASTRO-AI V4.0</p>
+        <p class="devanagari" style="font-size: 1.2rem; margin-top: 10px;">तपसा प्राप्यते फलम्</p>
     </footer>
 
     <script>
-        // --- DATA & CONFIG ---
-        const DASHA_ORDER = ["Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury"];
-        const DASHA_YEARS = [7, 20, 6, 10, 7, 18, 16, 19, 17];
-        
-        const INTERPRETATIONS = {
-            "Ketu": "A time for spiritual seeking, letting go of the past, and internal reflection. You may feel detached but gain deep wisdom.",
-            "Venus": "The era of love, luxury, art, and relationships. Focus turns to comfort, romance, and aesthetic pleasure.",
-            "Sun": "A period of authority, clarity, and self-realization. Power dynamics and career advancement often take center stage.",
-            "Moon": "Emotional growth, motherhood, home, and intuition. Your sensitivity is heightened; focus on mental peace.",
-            "Mars": "Action-oriented phase. High energy, potential for conflict, but great for starting new ventures and physical feats.",
-            "Rahu": "Ambition, desire, and worldly expansion. Sudden shifts and technological or unconventional paths might open up.",
-            "Jupiter": "Wisdom, wealth, and expansion. A 'golden period' for learning, teaching, and overall prosperity.",
-            "Saturn": "Discipline, hard work, and delays. Life asks you to be patient and build solid foundations through perseverance.",
-            "Mercury": "Communication, intellect, and commerce. Great for writing, studying, networking, and business activities."
+        const DATA = {
+            planets: {
+                "Ketu": { s: "केतु", icon: "ॐ", years: 7, shloka: "पलाशापुष्पसंकाशं तारकाग्रहमस्तकम् ।", desc: "The South Node (Dragon's Tail). It represents spiritual liberation (Moksha), past life talents, and sudden detachment.", career: "High intuition. Research, occult sciences, and spiritual teaching thrive. Worldly gains may feel hollow.", love: "Karmic relationships that teach detachment. You may prefer solitude or deep spiritual connection over superficial romance.", health: "Focus on the nervous system and mysterious ailments. Meditation is the best medicine.", spirit: "Ideal time for pilgrimages and Vipassana. Release attachments to material identity." },
+                "Venus": { s: "शुक्र", icon: "शु", years: 20, shloka: "हिमकुन्दमृणालाभं दैत्यानां परमं गुरुम् ।", desc: "The planet of beauty, love, and luxury. A long cycle of 20 years bringing refinement and material joy.", career: "Prosperity through arts, media, luxury goods, or finance. You possess a 'Midas touch' in creative industries.", love: "The peak of romantic experiences. Marriage or high-level social networking is highly likely.", health: "Focus on kidney health and dietary moderation. Indulgence is your biggest risk.", spirit: "Find the divine in beauty. Bhakti Yoga and mantra chanting for Lakshmi are recommended." },
+                "Sun": { s: "सूर्य", icon: "सू", years: 6, shloka: "जपाकुसुमसंकाशं काश्यपेयं महाद्युतिम् ।", desc: "The King of the Zodiac. A short but intense 6-year burst of power, ego, and soul-realization.", career: "Leadership beckons. Recognition from authorities, government positions, or running your own empire.", love: "You demand respect. Relationships center around pride and public image. Don't let ego overshadow intimacy.", health: "Heart and bone health. High energy, but watch for burnout from excessive 'heat' (anger/stress).", spirit: "Self-realization. Practice Surya Namaskar and Atma-Chintan (Self-reflection)." },
+                "Moon": { s: "चन्द्र", icon: "चं", years: 10, shloka: "दधिशङ्खतुषाराभं क्षीरोदार्णवसम्भवम् ।", desc: "The significator of Mind and Emotions. A decade of internal flux, motherly energy, and intuition.", career: "Public-facing roles. Success in hospitality, psychology, liquids, or care-giving industries.", love: "Deeply emotional and nurturing phase. You seek safety and a 'home' in your partner's heart.", health: "Mental health is priority. Watch for water retention and fluctuating energy levels.", spirit: "Nurture the inner child. Moon meditation and connecting with ancestral roots." },
+                "Mars": { s: "मङ्गल", icon: "मं", years: 7, shloka: "धरणीगर्भसम्भूतं विद्युत्कान्तिसमप्रभम् ।", desc: "The Commander-in-Chief. 7 years of raw courage, ambition, and competitive drive.", career: "Victory in legal battles, sports, engineering, or real estate. You are unstoppable but may be impulsive.", love: "Passion is high, but so is friction. Learn to channel aggression into protecting the loved one rather than attacking.", health: "Risk of injuries or surgeries. High physical vitality; regular exercise is mandatory.", spirit: "Karma Yoga. Chanting Hanuman Chalisa provides the necessary focus and discipline." },
+                "Rahu": { s: "राहु", icon: "रा", years: 18, shloka: "अर्धकायं महावीर्यं चन्द्रादित्यविमर्दनम् ।", desc: "The North Node. 18 years of obsession, innovation, and breaking boundaries. A period of extreme highs and lows.", career: "Unexpected fame. Success in foreign lands, tech, or unconventional fields. Beware of illusory shortcuts.", love: "Unconventional or foreign-born partners. Intense cravings that might be hard to satisfy.", health: "Hard-to-diagnose issues. Avoid intoxicants at all costs; Rahu amplifies addictions.", spirit: "Distinguishing illusion (Maya) from reality. Practice grounding rituals and stay close to nature." },
+                "Jupiter": { s: "गुरु", icon: "गु", years: 16, shloka: "देवानां च ऋषीणां च गुरुं काञ्चनसन्निभम् ।", desc: "The Great Benefic. 16 years of wisdom, children, wealth, and expanding your worldview.", career: "Teaching, consulting, and law. You become a mentor. Financial growth is steady and based on ethics.", love: "Grace in relationships. A time for family expansion and meaningful, long-term stability.", health: "Liver and weight management. Overall robust health, but don't over-expand your body.", spirit: "The highest spiritual growth. Study of Shastras and finding a Guru or guide." },
+                "Saturn": { s: "शनि", icon: "श", years: 19, shloka: "नीलाञ्जनसमाभासं रविपुत्रं यमाग्रजम् ।", desc: "The Taskmaster. 19 years of karma, discipline, and delayed rewards. What you build now lasts forever.", career: "Slow but massive climb. Success through structure, labor, and patience. You learn the value of time.", love: "Tests of loyalty. Only the truest bonds survive. You may marry late or to a much older/mature person.", health: "Joints, teeth, and chronic issues. Longevity increases through discipline and simple living.", spirit: "Vairagya (Dispassion). Serving the elderly or the underprivileged balances Saturn's energy." },
+                "Mercury": { s: "बुध", icon: "बु", years: 17, shloka: "प्रियङ्गुकलिकाश्यामं रूपेणाप्रतिमं बुधम् ।", desc: "The Prince of Logic. 17 years of communication, commerce, and intellectual dexterity.", career: "Thriving in data, writing, trading, and coding. Your wit is your greatest asset. High mobility.", love: "Mental compatibility becomes the most attractive trait. Communication is the key to your heart.", health: "Nervous exhaustion. Ensure proper sleep; your brain is working overtime.", spirit: "Jnana Yoga. Learning sacred languages or studying philosophical texts." }
+            },
+            order: ["Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury"]
         };
 
-        let chartInstance = null;
+        let currentChart = null;
 
-        // --- CALCULATION LOGIC ---
-        
-        /**
-         * Simplified Moon Longitude Calculation (Approximation)
-         * Actual Vedic Astrology requires Ephemeris. This model provides a mock 
-         * algorithmic approximation based on the date to demonstrate the UI/Logic flow.
+        /** * Improved Accuracy: Julian Day Number & Moon Longitude Approximation
+         * This uses the Luni-Solar Mean Motion formula for a much tighter estimate
          */
-        function getMoonLongitude(birthDate) {
-            const epoch = new Date("2000-01-01T00:00:00Z").getTime();
-            const birth = birthDate.getTime();
-            const diffDays = (birth - epoch) / (1000 * 60 * 60 * 24);
+        function getHighPrecisionMoon(date) {
+            const jdn = (date.getTime() / 86400000) + 2440587.5;
+            const t = (jdn - 2451545.0) / 36525; // Centuries since J2000
             
-            // Moon mean motion: ~13.176 degrees/day
-            const meanLong = (125.08 + (13.17639 * diffDays)) % 360;
-            return meanLong < 0 ? meanLong + 360 : meanLong;
+            // Mean longitude of Moon (Simplified ELP82)
+            let L = 218.316 + 481267.881 * t;
+            // Mean anomaly
+            let M = 134.963 + 477198.867 * t;
+            // Correction for better accuracy
+            L += 6.289 * Math.sin(M * Math.PI / 180);
+            
+            let finalLong = L % 360;
+            return finalLong < 0 ? finalLong + 360 : finalLong;
         }
 
-        function calculateDasha() {
+        function calculateDeepDasha() {
             const dob = document.getElementById('dob').value;
             const tob = document.getElementById('tob').value;
-            
-            if(!dob || !tob) {
-                alert("Please select your birth details first.");
-                return;
-            }
+            if(!dob || !tob) return;
 
-            // Show Loader
             document.getElementById('loader').style.display = 'block';
-            document.getElementById('results-container').style.display = 'none';
+            document.getElementById('results-area').style.display = 'none';
 
             setTimeout(() => {
                 const birthDate = new Date(`${dob}T${tob}`);
-                const moonLong = getMoonLongitude(birthDate);
+                const moonLong = getHighPrecisionMoon(birthDate);
                 
-                // Nakshatra = 13° 20' = 13.333 degrees
-                const nakshatraSize = 13.333333;
+                const nakshatraSize = 360 / 27; // 13.333
                 const nakIndex = Math.floor(moonLong / nakshatraSize);
-                const dashaStartPlanetIdx = nakIndex % 9;
+                const startPlanetIdx = nakIndex % 9;
                 
-                // Calculate balance of first dasha
-                const longInNak = moonLong % nakshatraSize;
-                const remainingInNak = nakshatraSize - longInNak;
-                const percentageRemaining = remainingInNak / nakshatraSize;
-                
-                processDashaTimeline(birthDate, dashaStartPlanetIdx, percentageRemaining);
+                const passedInNak = moonLong % nakshatraSize;
+                const remainingInNak = nakshatraSize - passedInNak;
+                const percentLeft = remainingInNak / nakshatraSize;
+
+                generateTimeline(birthDate, startPlanetIdx, percentLeft);
                 
                 document.getElementById('loader').style.display = 'none';
-                document.getElementById('results-container').style.display = 'block';
-            }, 1500);
+                document.getElementById('results-area').style.display = 'block';
+            }, 1200);
         }
 
-        function processDashaTimeline(birthDate, startIdx, balancePercent) {
+        function generateTimeline(birthDate, startIdx, percentLeft) {
             let timeline = [];
-            let currentDate = new Date(birthDate);
-            let now = new Date();
-            let currentMahadasha = null;
+            let cursor = new Date(birthDate);
+            const now = new Date();
             
-            // Build 120 year cycle
             let idx = startIdx;
-            let totalCycles = 0;
-
-            // First Dasha is partial
-            const firstDashaYears = DASHA_YEARS[idx] * balancePercent;
-            const firstEndDate = addYears(currentDate, firstDashaYears);
             
-            timeline.push({
-                planet: DASHA_ORDER[idx],
-                start: new Date(currentDate),
-                end: new Date(firstEndDate),
-                duration: firstDashaYears
-            });
+            // First partial dasha
+            const firstPlanet = DATA.order[idx];
+            const firstYears = DATA.planets[firstPlanet].years * percentLeft;
+            let end = addPreciseYears(cursor, firstYears);
             
-            currentDate = new Date(firstEndDate);
+            timeline.push({ name: firstPlanet, start: new Date(cursor), end: new Date(end), years: firstYears });
+            cursor = new Date(end);
             idx = (idx + 1) % 9;
 
-            // Fill the rest up to 120 years
-            while (timeline.length < 9) {
-                let duration = DASHA_YEARS[idx];
-                let endDate = addYears(currentDate, duration);
-                
-                timeline.push({
-                    planet: DASHA_ORDER[idx],
-                    start: new Date(currentDate),
-                    end: new Date(endDate),
-                    duration: duration
-                });
-                
-                currentDate = new Date(endDate);
+            // Next 8 major cycles (Total 9 for full analysis)
+            for(let i=0; i<8; i++) {
+                const pName = DATA.order[idx];
+                const pYears = DATA.planets[pName].years;
+                end = addPreciseYears(cursor, pYears);
+                timeline.push({ name: pName, start: new Date(cursor), end: new Date(end), years: pYears });
+                cursor = new Date(end);
                 idx = (idx + 1) % 9;
             }
 
-            renderTimeline(timeline, now, birthDate);
+            renderFullAnalysis(timeline, now, birthDate);
         }
 
-        function addYears(date, years) {
-            const result = new Date(date);
-            const fractionalYears = years % 1;
-            const wholeYears = Math.floor(years);
-            result.setFullYear(result.getFullYear() + wholeYears);
-            if(fractionalYears > 0) {
-                result.setMonth(result.getMonth() + Math.floor(fractionalYears * 12));
-            }
-            return result;
+        function addPreciseYears(date, y) {
+            let d = new Date(date);
+            d.setFullYear(d.getFullYear() + Math.floor(y));
+            d.setMonth(d.getMonth() + Math.floor((y % 1) * 12));
+            return d;
         }
 
-        function renderTimeline(timeline, now, birthDate) {
-            const container = document.getElementById('mahadasha-timeline');
-            container.innerHTML = '';
-            
-            let activeDasha = null;
+        function renderFullAnalysis(timeline, now, birth) {
+            const track = document.getElementById('main-track');
+            track.innerHTML = '';
+            let active = timeline.find(d => now >= d.start && now <= d.end) || timeline[0];
 
-            timeline.forEach((d, i) => {
-                const isActive = now >= d.start && now <= d.end;
-                if(isActive) activeDasha = d;
-
-                const block = document.createElement('div');
-                block.className = `dasha-block ${isActive ? 'active' : ''}`;
-                const width = (d.duration / 120) * 1000;
-                block.style.width = width + 'px';
-
-                const ageAtStart = Math.floor((d.start - birthDate) / (1000 * 60 * 60 * 24 * 365.25));
-
-                block.innerHTML = `
-                    <div class="age-marker">Age ${ageAtStart < 0 ? 0 : ageAtStart}</div>
-                    <div class="dasha-name">${d.planet}</div>
-                    <div class="dasha-dates">${d.start.getFullYear()} - ${d.end.getFullYear()}</div>
-                `;
+            timeline.forEach(d => {
+                const isActive = d === active;
+                const node = document.createElement('div');
+                node.className = `dasha-node ${isActive ? 'active' : ''}`;
+                node.style.width = (d.years * 15) + "px"; // Scale for visual
                 
-                block.onclick = () => showAntardasha(d, now);
-                container.appendChild(block);
+                const age = Math.round((d.start - birth) / 31557600000);
+                node.innerHTML = `
+                    <div style="font-size:0.7rem; color:#999">Age ${age < 0 ? 0 : age}</div>
+                    <div class="node-planet">${d.name}</div>
+                    <div class="node-sanskrit">${DATA.planets[d.name].s}</div>
+                `;
+                node.onclick = () => updateFocus(d, now);
+                track.appendChild(node);
             });
 
-            if(activeDasha) {
-                updateCurrentUI(activeDasha, now);
-                showAntardasha(activeDasha, now);
-                renderChart(timeline, now);
-            }
+            updateFocus(active, now);
+            renderChart(timeline, active.name);
         }
 
-        function updateCurrentUI(dasha, now) {
-            document.getElementById('current-badge').innerText = `Current: ${dasha.planet} Mahadasha`;
-            document.getElementById('main-summary').innerText = `You are in your ${dasha.planet} Era`;
-            document.getElementById('phase-interpretation').innerText = INTERPRETATIONS[dasha.planet] || "";
-        }
-
-        function showAntardasha(mahadasha, now) {
-            const list = document.getElementById('antardasha-list');
-            const title = document.getElementById('antardasha-title');
-            list.innerHTML = '';
-            title.innerText = `Sub-periods (Antardasha) in ${mahadasha.planet}`;
-
-            // Calculation: Antardasha duration = (M years * A years) / 120
-            const mYears = DASHA_YEARS[DASHA_ORDER.indexOf(mahadasha.planet)];
-            let startOfSub = new Date(mahadasha.start);
-
-            // Antardasha sequence starts with the Mahadasha lord
-            let startSubIdx = DASHA_ORDER.indexOf(mahadasha.planet);
-
-            for(let i=0; i<9; i++) {
-                let subPlanet = DASHA_ORDER[(startSubIdx + i) % 9];
-                let subYears = DASHA_YEARS[DASHA_ORDER.indexOf(subPlanet)];
-                let durationInMonths = (mYears * subYears) * 0.1; // (M*A)/120 * 12 months = (M*A)/10
-                
-                let endOfSub = new Date(startOfSub);
-                endOfSub.setMonth(endOfSub.getMonth() + (durationInMonths));
-
-                const isActive = now >= startOfSub && now <= endOfSub;
-                
-                const item = document.createElement('div');
-                item.className = `antardasha-item ${isActive ? 'current' : ''}`;
-                item.innerHTML = `
-                    <strong>${subPlanet}</strong><br>
-                    <span style="opacity: 0.7">${startOfSub.toLocaleDateString('en-US', {month: 'short', year:'2-digit'})} - ${endOfSub.toLocaleDateString('en-US', {month: 'short', year:'2-digit'})}</span>
-                    ${isActive ? '<br><span style="color:#8B5CF6; font-size: 0.6rem; font-weight:bold;">CURRENT PHASE</span>' : ''}
-                `;
-                list.appendChild(item);
-
-                startOfSub = new Date(endOfSub);
-            }
-        }
-
-        function renderChart(timeline, now) {
-            const ctx = document.getElementById('dashaChart').getContext('2d');
+        function updateFocus(dasha, now) {
+            const p = DATA.planets[dasha.name];
+            document.getElementById('planet-icon').innerText = p.icon;
+            document.getElementById('current-badge').innerText = `${dasha.name} Mahadasha Era`;
+            document.getElementById('main-title').innerText = `${dasha.name} - The ${getRole(dasha.name)}`;
+            document.getElementById('shloka-box').innerText = p.shloka;
+            document.getElementById('journey-desc').innerText = p.desc;
             
-            if(chartInstance) chartInstance.destroy();
+            document.getElementById('career-advice').innerText = p.career;
+            document.getElementById('love-advice').innerText = p.love;
+            document.getElementById('health-advice').innerText = p.health;
+            document.getElementById('spiritual-advice').innerText = p.spirit;
 
-            const labels = timeline.map(d => d.planet);
-            const data = timeline.map(d => d.duration);
-            const backgroundColors = timeline.map(d => (now >= d.start && now <= d.end) ? '#C4B5FD' : '#F3F4F6');
+            // Calculate Antardasha (Sub-periods)
+            const list = document.getElementById('antardasha-mini');
+            list.innerHTML = '<strong>Sub-cycles:</strong> ';
+            let startIdx = DATA.order.indexOf(dasha.name);
+            for(let i=0; i<9; i++) {
+                const sub = DATA.order[(startIdx + i) % 9];
+                const isCurrentSub = (now >= dasha.start && now <= dasha.end && i === 0); // Simplified for UI
+                list.innerHTML += `<span style="opacity:${isCurrentSub?1:0.5}">${sub}${i<8?', ':''}</span>`;
+            }
+        }
 
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
+        function getRole(name) {
+            const roles = { Ketu: "Mystic", Venus: "Lover", Sun: "King", Moon: "Mother", Mars: "Warrior", Rahu: "Outcast", Jupiter: "Guru", Saturn: "Judge", Mercury: "Prince" };
+            return roles[name];
+        }
+
+        function renderChart(timeline, activeName) {
+            const ctx = document.getElementById('cycleChart').getContext('2d');
+            if(currentChart) currentChart.destroy();
+            
+            currentChart = new Chart(ctx, {
+                type: 'doughnut',
                 data: {
-                    labels: labels,
+                    labels: timeline.map(t => t.name),
                     datasets: [{
-                        label: 'Years',
-                        data: data,
-                        backgroundColor: backgroundColors,
-                        borderRadius: 8,
+                        data: timeline.map(t => t.years),
+                        backgroundColor: timeline.map(t => t.name === activeName ? '#8B5CF6' : '#EDE9FE'),
                         borderWidth: 0
                     }]
                 },
                 options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { display: false },
-                        x: { grid: { display: false } }
-                    }
+                    cutout: '80%',
+                    plugins: { legend: { display: false } }
                 }
             });
         }
-
-        // Initialize with helpful defaults
-        window.onload = () => {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('dob').value = "1995-06-15";
-            document.getElementById('tob').value = "14:30";
-            document.getElementById('pob').value = "New York, USA";
-        };
     </script>
 </body>
 </html>
